@@ -17,6 +17,24 @@ async def init_db():
         """)
         await db.commit()
 
+        async with db.execute("PRAGMA table_info(projects)") as cursor:
+            columns_info = await cursor.fetchall()
+            existing_columns = [col[1] for col in columns_info]
+
+        for i in range(len(CATEGORIES)):
+            t_col = f"t_{i}"
+            p_col = f"p_{i}"
+
+            if t_col not in existing_columns:
+                await db.execute(f"ALTER TABLE projects ADD COLUMN {t_col} REAL DEFAULT 0")
+                print(f"Добавлена новая колонка {t_col} в базу данных.")
+
+            if p_col not in existing_columns:
+                await db.execute(f"ALTER TABLE projects ADD COLUMN {p_col} REAL DEFAULT 0")
+                print(f"Добавлена новая колонка {p_col} в базу данных.")
+
+        await db.commit()
+
 
 async def get_projects():
     async with aiosqlite.connect(DB_PATH) as db:
